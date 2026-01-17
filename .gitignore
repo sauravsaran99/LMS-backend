@@ -1,0 +1,86 @@
+# =========================
+# Node dependencies
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Build output
+# =========================
+dist/
+build/
+out/
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editor files
+# =========================
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# Coverage
+# =========================
+coverage/
+
+# =========================
+# Uploads (important for your LMS project)
+# =========================
+uploads/
+!uploads/.gitkeep
+
+# =========================
+# Database
+# =========================
+*.sqlite
+*.sqlite3
+
+# =========================
+# Sequelize
+# =========================
+sequelize-meta.json
+
+# =========================
+# Cache
+# =========================
+.cache/
+.tmp/
+
+# =========================
+# Docker
+# =========================
+.docker/
+docker-compose.override.yml
+
+# =========================
+# Runtime
+# =========================
+*.pid
+*.seed
+
+# =========================
+# TypeScript (if used)
+# =========================
+*.tsbuildinfo
