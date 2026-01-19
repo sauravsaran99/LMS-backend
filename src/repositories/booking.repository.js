@@ -1,11 +1,12 @@
+const { Op, fn, col, literal } = require("sequelize");
 const {
   Booking,
   BookingTest,
   Test,
   Customer,
   AuditLog,
-  User
-} = require('../models');
+  User,
+} = require("../models");
 
 class BookingRepository {
   async getCustomerById(id) {
@@ -14,7 +15,7 @@ class BookingRepository {
 
   async getTestsByIds(ids) {
     return Test.findAll({
-      where: { id: ids, is_active: true }
+      where: { id: ids, is_active: true },
     });
   }
 
@@ -28,13 +29,12 @@ class BookingRepository {
         {
           booking_id: bookingId,
           test_id: test.id,
-          price_snapshot: test.price
+          price_snapshot: test.price,
         },
-        { transaction }
+        { transaction },
       );
     }
   }
-
 
   async createAuditLog(data, transaction) {
     return AuditLog.create(data, { transaction });
@@ -51,16 +51,15 @@ class BookingRepository {
 
     return Booking.findOne({
       where: { booking_number: bookingNumber },
-      ...options
+      ...options,
     });
   }
-
 
   async updateTechnicianAndStatus(
     bookingId,
     technicianId,
     status,
-    transaction
+    transaction,
   ) {
     return Booking.update(
       {
@@ -70,7 +69,7 @@ class BookingRepository {
       {
         where: { id: bookingId },
         transaction,
-      }
+      },
     );
   }
 
@@ -100,19 +99,79 @@ class BookingRepository {
     return Booking.findAll({
       where: {
         technician_id: technicianId,
-        status: ["TECH_ASSIGNED", "SAMPLE_COLLECTED"],
+        status: {
+          [Op.in]: ["TECH_ASSIGNED", "SAMPLE_COLLECTED"],
+        },
       },
       include: [
-        { model: Customer, attributes: ["id", "name"] },
+        {
+          model: Customer,
+          attributes: ["id", "name"],
+        },
       ],
+      attributes: {
+        include: [
+          // total_paid
+          [
+            literal(`(
+            SELECT COALESCE(SUM(p.amount), 0)
+            FROM payments p
+            WHERE p.booking_number = Booking.booking_number
+          )`),
+            "total_paid",
+          ],
+
+          // total_refunded
+          [
+            literal(`(
+            SELECT COALESCE(SUM(r.amount), 0)
+            FROM refunds r
+            WHERE r.booking_number = Booking.booking_number
+          )`),
+            "total_refunded",
+          ],
+
+          // pending_amount
+          [
+            literal(`(
+            Booking.final_amount
+            - (
+              SELECT COALESCE(SUM(p.amount), 0)
+              FROM payments p
+              WHERE p.booking_number = Booking.booking_number
+            )
+            + (
+              SELECT COALESCE(SUM(r.amount), 0)
+              FROM refunds r
+              WHERE r.booking_number = Booking.booking_number
+            )
+          )`),
+            "pending_amount",
+          ],
+        ],
+      },
       order: [["scheduled_date", "ASC"]],
+    });
+  }
+
+  async getTechnicianBookings(user) {
+    if (user.role !== "TECHNICIAN") {
+      throw new Error("Invalid role");
+    }
+
+    return Booking.findAll({
+      where: {
+        technician_id: user.id,
+        status: ["TECH_ASSIGNED", "SAMPLE_COLLECTED", "COMPLETED"],
+      },
+      order: [["created_at", "DESC"]],
     });
   }
 
   async updateStatus(bookingId, status, transaction) {
     return Booking.update(
       { status },
-      { where: { id: bookingId }, transaction }
+      { where: { id: bookingId }, transaction },
     );
   }
 
@@ -122,19 +181,16 @@ class BookingRepository {
         technician_id: technicianId,
         status: "COMPLETED",
       },
-      include: [
-        { model: Customer, attributes: ["id", "name"] },
-      ],
+      include: [{ model: Customer, attributes: ["id", "name"] }],
       order: [["updated_at", "DESC"]],
     });
   }
 
   async getByBookingNumber(bookingNumber) {
     return Booking.findOne({
-      where: { booking_number: bookingNumber }
+      where: { booking_number: bookingNumber },
     });
   }
-
 }
 
 module.exports = new BookingRepository();

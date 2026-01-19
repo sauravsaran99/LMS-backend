@@ -1,7 +1,5 @@
 const customerService = require("../services/customer.service");
-const {
-  createCustomerSchema,
-} = require("../validators/customer.validator");
+const { createCustomerSchema } = require("../validators/customer.validator");
 
 exports.createCustomer = async (req, res) => {
   try {
@@ -12,10 +10,7 @@ exports.createCustomer = async (req, res) => {
       });
     }
 
-    const customer = await customerService.createCustomer(
-      value,
-      req.user
-    );
+    const customer = await customerService.createCustomer(value, req.user);
 
     res.status(201).json(customer);
   } catch (err) {
@@ -55,3 +50,55 @@ exports.toggleStatus = async (req, res) => {
   }
 };
 
+exports.getMe = async (req, res) => {
+  res.json({
+    customer_id: req.user.customer_id,
+    name: req.user.name,
+    email: req.user.email,
+  });
+};
+
+exports.getMyBookings = async (req, res) => {
+  try {
+    const data = await customerService.getMyBookings(req.user);
+    res.json(data);
+  } catch (e) {
+    res.status(400).json({ message: e.message });
+  }
+};
+
+exports.getBookingTests = async (req, res) => {
+  try {
+    const data = await customerService.getBookingTests(
+      req.params.bookingId,
+      req.user,
+    );
+    res.json(data);
+  } catch (e) {
+    res.status(403).json({ message: e.message });
+  }
+};
+
+exports.getBookingReports = async (req, res) => {
+  try {
+    const data = await customerService.getBookingReports(
+      req.params.bookingId,
+      req.user,
+    );
+    res.json(data);
+  } catch (e) {
+    res.status(403).json({ message: e.message });
+  }
+};
+
+exports.getBookingPayments = async (req, res) => {
+  try {
+    const data = await customerService.getBookingPayments(
+      req.params.bookingNumber,
+      req.user,
+    );
+    res.json(data);
+  } catch (e) {
+    res.status(403).json({ message: e.message });
+  }
+};

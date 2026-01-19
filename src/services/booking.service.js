@@ -1,9 +1,10 @@
-const bookingRepo = require('../repositories/booking.repository');
-const { calculateDiscount } = require('../utils/discount.util');
-const { validateDiscount } = require('../utils/discount.validator');
-const { generateBookingNumber } = require('../utils/bookingNumber.util');
-const { Booking, sequelize, AuditLog } = require('../models');
-const { isPastBooking } = require('../utils/dateTime.validator');
+const bookingRepo = require("../repositories/booking.repository");
+const { calculateDiscount } = require("../utils/discount.util");
+const { validateDiscount } = require("../utils/discount.validator");
+const { generateBookingNumber } = require("../utils/bookingNumber.util");
+const { Booking, sequelize, AuditLog } = require("../models");
+const { isPastBooking } = require("../utils/dateTime.validator");
+const BookingReport = require("../models/bookingReport.model");
 
 class BookingService {
   async createBooking(payload, user) {
@@ -16,7 +17,7 @@ class BookingService {
         scheduled_date,
         scheduled_time,
         discount_type,
-        discount_value
+        discount_value,
       } = payload;
 
       // ❗ STEP 0: Validate booking date & time
@@ -24,37 +25,36 @@ class BookingService {
         throw new Error("Cannot book tests in the past");
       }
 
-
       // 1. Validate customer
       const customer = await bookingRepo.getCustomerById(customer_id);
-      if (!customer) throw new Error('Customer not found');
+      if (!customer) throw new Error("Customer not found");
 
       // 2. Fetch tests
       const tests = await bookingRepo.getTestsByIds(test_ids);
-      if (!tests.length) throw new Error('No valid tests selected');
+      if (!tests.length) throw new Error("No valid tests selected");
 
       // 3. Calculate original amount
       const originalAmount = tests.reduce(
         (sum, test) => sum + Number(test.price),
-        0
+        0,
       );
 
       // 4. Apply discount
       let discountResult = {
         original_amount: originalAmount,
         discount_amount: 0,
-        final_amount: originalAmount
+        final_amount: originalAmount,
       };
 
       if (discount_type && discount_value) {
         if (!validateDiscount({ type: discount_type, value: discount_value })) {
-          throw new Error('Invalid discount');
+          throw new Error("Invalid discount");
         }
 
         discountResult = calculateDiscount({
           amount: originalAmount,
           type: discount_type,
-          value: discount_value
+          value: discount_value,
         });
       }
 
@@ -70,30 +70,26 @@ class BookingService {
           discount_type,
           discount_value,
           discount_amount: discountResult.discount_amount,
-          final_amount: discountResult.final_amount
+          final_amount: discountResult.final_amount,
         },
-        transaction
+        transaction,
       );
 
       // 6. Create booking_tests
-      await bookingRepo.createBookingTests(
-        booking.id,
-        tests,
-        transaction
-      );
+      await bookingRepo.createBookingTests(booking.id, tests, transaction);
 
       // 7. Audit log
       await bookingRepo.createAuditLog(
         {
-          action_type: 'CREATE',
-          entity: 'Booking',
+          action_type: "CREATE",
+          entity: "Booking",
           entity_id: booking.id,
           new_value: booking,
           user_id: user.id,
           role: user.role,
-          branch_id: booking.branch_id
+          branch_id: booking.branch_id,
         },
-        transaction
+        transaction,
       );
 
       await transaction.commit();
@@ -116,7 +112,7 @@ class BookingService {
 
       if (booking.status !== "CREATED") {
         throw new Error(
-          "Technician can only be assigned when booking is in CREATED state"
+          "Technician can only be assigned when booking is in CREATED state",
         );
       }
 
@@ -124,7 +120,7 @@ class BookingService {
         bookingId,
         technicianId,
         "TECH_ASSIGNED",
-        t
+        t,
       );
 
       await AuditLog.create({
@@ -183,15 +179,11 @@ class BookingService {
 
       if (booking.status !== "TECH_ASSIGNED") {
         throw new Error(
-          "Sample can only be collected for TECH_ASSIGNED bookings"
+          "Sample can only be collected for TECH_ASSIGNED bookings",
         );
       }
 
-      await bookingRepo.updateStatus(
-        bookingId,
-        "SAMPLE_COLLECTED",
-        t
-      );
+      await bookingRepo.updateStatus(bookingId, "SAMPLE_COLLECTED", t);
 
       await AuditLog.create({
         action: "SAMPLE_COLLECTED",
@@ -224,15 +216,11 @@ class BookingService {
 
       if (booking.status !== "SAMPLE_COLLECTED") {
         throw new Error(
-          "Booking can only be completed after sample collection"
+          "Booking can only be completed after sample collection",
         );
       }
 
-      await bookingRepo.updateStatus(
-        bookingId,
-        "COMPLETED",
-        t
-      );
+      await bookingRepo.updateStatus(bookingId, "COMPLETED", t);
 
       await AuditLog.create({
         action: "BOOKING_COMPLETED",
@@ -255,6 +243,43 @@ class BookingService {
     }
 
     return bookingRepo.findCompletedForTechnician(user.id);
+  }
+
+  async uploadTestReport(bookingId, filePath, user) {
+    if (user.role !== "TECHNICIAN") {
+      throw new Error("Unauthorized");
+    }
+
+    const booking = await Booking.findByPk(bookingId);
+    if (!booking) throw new Error("Booking not found");
+
+    if (booking.technician_id !== user.id) {
+      throw new Error("Not assigned to this booking");
+    }
+
+    if (!["SAMPLE_COLLECTED", "COMPLETED"].includes(booking.status)) {
+      throw new Error("Reports can only be uploaded after sample collection");
+    }
+
+    const report = await BookingReport.create({
+      booking_id: booking.id,
+      file_url: filePath,
+      uploaded_by_user_id: user.id,
+      uploaded_by_role: "TECHNICIAN",
+    });
+
+    await AuditLog.create({
+      action: "REPORT_UPLOADED",
+      action_type: "CREATE",
+      entity: "BOOKING_REPORT",
+      entity_id: report.id,
+      new_value: { file_url: filePath },
+      user_id: user.id,
+      role: user.role,
+      branch_id: booking.branch_id,
+    });
+
+    return report;
   }
 }
 
