@@ -85,14 +85,22 @@ class CustomerService {
     }
   }
 
-  async searchCustomers(query) {
+  async searchCustomers(query, pagination = null) {
     if (!query || query.length < 2) {
       return [];
     }
-    return customerRepo.search(query);
+    return customerRepo.search(query, pagination);
   }
 
-  getCustomers(user) {
+  getCustomers(user, pagination = null) {
+    if (pagination) {
+      return Customer.findAndCountAll({
+        where: { base_branch_id: user.base_branch_id },
+        order: [["created_at", "DESC"]],
+        limit: pagination.limit,
+        offset: pagination.offset,
+      });
+    }
     return Customer.findAll({
       where: { base_branch_id: user.base_branch_id },
       order: [["created_at", "DESC"]],
@@ -152,14 +160,14 @@ class CustomerService {
     });
   }
 
-  async getMyBookings(user) {
+  async getMyBookings(user, pagination = null) {
     const customer = await Customer.findOne({
       where: { user_id: user.id },
     });
 
     if (!customer) throw new Error("Customer profile not found");
 
-    const bookings = await Booking.findAll({
+    const options = {
       where: { customer_id: customer.id },
       order: [["created_at", "DESC"]],
       include: [
@@ -177,12 +185,20 @@ class CustomerService {
         ],
       },
       group: ["Booking.id"],
-    });
+    };
 
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+      const result = await Booking.findAndCountAll(options);
+      return result;
+    }
+
+    const bookings = await Booking.findAll(options);
     return bookings;
   }
 
-  async getBookingTests(bookingId, user) {
+  async getBookingTests(bookingId, user, pagination = null) {
     const customer = await Customer.findOne({
       where: { user_id: user.id },
     });
@@ -198,13 +214,22 @@ class CustomerService {
 
     if (!booking) throw new Error("Unauthorized");
 
-    return BookingTest.findAll({
+    const options = {
       where: { booking_id: booking.id },
       include: [{ model: Test, attributes: ["id", "name"] }],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+      const result = await BookingTest.findAndCountAll(options);
+      return result;
+    }
+
+    return BookingTest.findAll(options);
   }
 
-  async getBookingPayments(bookingNumber, user) {
+  async getBookingPayments(bookingNumber, user, pagination = null) {
     const customer = await Customer.findOne({
       where: { user_id: user.id },
     });
@@ -220,13 +245,22 @@ class CustomerService {
 
     if (!booking) throw new Error("Unauthorized");
 
-    return Payment.findAll({
+    const options = {
       where: { booking_number: bookingNumber },
       order: [["payment_date", "ASC"]],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+      const result = await Payment.findAndCountAll(options);
+      return result;
+    }
+
+    return Payment.findAll(options);
   }
 
-  async getBookingReports(bookingId, user) {
+  async getBookingReports(bookingId, user, pagination = null) {
     const customer = await Customer.findOne({
       where: { user_id: user.id },
     });
@@ -246,10 +280,19 @@ class CustomerService {
       throw new Error("Unauthorized");
     }
 
-    return BookingReport.findAll({
+    const options = {
       where: { booking_id: booking.id },
       order: [["created_at", "DESC"]],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+      const result = await BookingReport.findAndCountAll(options);
+      return result;
+    }
+
+    return BookingReport.findAll(options);
   }
 }
 

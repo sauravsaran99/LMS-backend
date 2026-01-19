@@ -1,4 +1,8 @@
-const { Doctor } = require('../models');
+const { Doctor } = require("../models");
+const {
+  getPaginationParams,
+  getPaginatedResponse,
+} = require("../utils/pagination.util");
 
 exports.createDoctor = async (req, res) => {
   try {
@@ -10,6 +14,26 @@ exports.createDoctor = async (req, res) => {
 };
 
 exports.getAllDoctors = async (req, res) => {
-  const doctors = await Doctor.findAll();
-  res.json(doctors);
+  const paginationParams = getPaginationParams(req.query);
+  const options = {};
+
+  if (paginationParams) {
+    options.limit = paginationParams.limit;
+    options.offset = paginationParams.offset;
+  }
+
+  if (paginationParams) {
+    const result = await Doctor.findAndCountAll(options);
+    res.json(
+      getPaginatedResponse(
+        result.rows,
+        result.count,
+        paginationParams.page,
+        paginationParams.limit,
+      ),
+    );
+  } else {
+    const doctors = await Doctor.findAll();
+    res.json(doctors);
+  }
 };

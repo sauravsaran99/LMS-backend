@@ -7,6 +7,7 @@ const {
   AuditLog,
   User,
 } = require("../models");
+const { calculateOffset } = require("../utils/pagination.util");
 
 class BookingRepository {
   async getCustomerById(id) {
@@ -73,30 +74,56 @@ class BookingRepository {
     );
   }
 
-  async findByStatus(where) {
-    return Booking.findAll({
+  async findByStatus(where, pagination = null) {
+    const options = {
       where,
       include: [
         { model: Customer, attributes: ["id", "name"] },
         { model: User, as: "technician", attributes: ["id", "name"] },
       ],
       order: [["created_at", "DESC"]],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+    }
+
+    if (pagination) {
+      const total = await Booking.count({ where });
+      const bookings = await Booking.findAll(options);
+      return { bookings, total };
+    }
+
+    return Booking.findAll(options);
   }
 
-  async findAll(whereClause) {
-    return Booking.findAll({
+  async findAll(whereClause, pagination = null) {
+    const options = {
       where: whereClause, // ✅ ALWAYS OBJECT
       include: [
         { model: Customer, attributes: ["id", "name", "phone"] },
         { model: User, as: "technician", attributes: ["id", "name"] },
       ],
       order: [["created_at", "DESC"]],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+    }
+
+    if (pagination) {
+      const total = await Booking.count({ where: whereClause });
+      const bookings = await Booking.findAll(options);
+      return { bookings, total };
+    }
+
+    return Booking.findAll(options);
   }
 
-  async findForTechnician(technicianId) {
-    return Booking.findAll({
+  async findForTechnician(technicianId, pagination = null) {
+    const options = {
       where: {
         technician_id: technicianId,
         status: {
@@ -151,21 +178,57 @@ class BookingRepository {
         ],
       },
       order: [["scheduled_date", "ASC"]],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+    }
+
+    if (pagination) {
+      const total = await Booking.count({
+        where: {
+          technician_id: technicianId,
+          status: { [Op.in]: ["TECH_ASSIGNED", "SAMPLE_COLLECTED"] },
+        },
+      });
+      const bookings = await Booking.findAll(options);
+      return { bookings, total };
+    }
+
+    return Booking.findAll(options);
   }
 
-  async getTechnicianBookings(user) {
+  async getTechnicianBookings(user, pagination = null) {
     if (user.role !== "TECHNICIAN") {
       throw new Error("Invalid role");
     }
 
-    return Booking.findAll({
+    const options = {
       where: {
         technician_id: user.id,
         status: ["TECH_ASSIGNED", "SAMPLE_COLLECTED", "COMPLETED"],
       },
       order: [["created_at", "DESC"]],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+    }
+
+    if (pagination) {
+      const total = await Booking.count({
+        where: {
+          technician_id: user.id,
+          status: ["TECH_ASSIGNED", "SAMPLE_COLLECTED", "COMPLETED"],
+        },
+      });
+      const bookings = await Booking.findAll(options);
+      return { bookings, total };
+    }
+
+    return Booking.findAll(options);
   }
 
   async updateStatus(bookingId, status, transaction) {
@@ -175,15 +238,33 @@ class BookingRepository {
     );
   }
 
-  async findCompletedForTechnician(technicianId) {
-    return Booking.findAll({
+  async findCompletedForTechnician(technicianId, pagination = null) {
+    const options = {
       where: {
         technician_id: technicianId,
         status: "COMPLETED",
       },
       include: [{ model: Customer, attributes: ["id", "name"] }],
       order: [["updated_at", "DESC"]],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+    }
+
+    if (pagination) {
+      const total = await Booking.count({
+        where: {
+          technician_id: technicianId,
+          status: "COMPLETED",
+        },
+      });
+      const bookings = await Booking.findAll(options);
+      return { bookings, total };
+    }
+
+    return Booking.findAll(options);
   }
 
   async getByBookingNumber(bookingNumber) {

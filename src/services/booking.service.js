@@ -138,7 +138,7 @@ class BookingService {
     });
   }
 
-  async getBookingsByStatus({ status, user }) {
+  async getBookingsByStatus({ status, user, pagination = null }) {
     const where = {
       status, // "CREATED"
     };
@@ -152,15 +152,15 @@ class BookingService {
       }
     }
 
-    return bookingRepo.findAll(where);
+    return bookingRepo.findAll(where, pagination);
   }
 
-  async getTechnicianBookings(user) {
+  async getTechnicianBookings(user, pagination = null) {
     if (user.role !== "TECHNICIAN") {
       throw new Error("Access denied");
     }
 
-    return bookingRepo.findForTechnician(user.id);
+    return bookingRepo.findForTechnician(user.id, pagination);
   }
 
   async collectSample({ bookingId, user }) {
@@ -237,12 +237,12 @@ class BookingService {
     });
   }
 
-  async getCompletedBookingsForTechnician(user) {
+  async getCompletedBookingsForTechnician(user, pagination = null) {
     if (user.role !== "TECHNICIAN") {
       throw new Error("Access denied");
     }
 
-    return bookingRepo.findCompletedForTechnician(user.id);
+    return bookingRepo.findCompletedForTechnician(user.id, pagination);
   }
 
   async uploadTestReport(bookingId, filePath, user) {

@@ -1,14 +1,15 @@
 const { User, Role, UserBranch } = require("../models");
+const { calculateOffset } = require("../utils/pagination.util");
 
 class UserRepository {
-  async findByRoleName(roleName, baseBranchId = null) {
+  async findByRoleName(roleName, baseBranchId = null, pagination = null) {
     const where = {};
 
     if (baseBranchId !== null) {
       where.base_branch_id = baseBranchId;
     }
 
-    return User.findAll({
+    const options = {
       where,
       include: [
         {
@@ -19,7 +20,29 @@ class UserRepository {
       ],
       attributes: ["id", "name"],
       order: [["name", "ASC"]],
-    });
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+    }
+
+    if (pagination) {
+      const total = await User.count({
+        where,
+        include: [
+          {
+            model: Role,
+            where: { name: roleName },
+            attributes: [],
+          },
+        ],
+      });
+      const users = await User.findAll(options);
+      return { users, total };
+    }
+
+    return User.findAll(options);
   }
 
   async getTechnicianBranchIds(userId) {

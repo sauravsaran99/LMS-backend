@@ -1,5 +1,9 @@
 const customerService = require("../services/customer.service");
 const { createCustomerSchema } = require("../validators/customer.validator");
+const {
+  getPaginationParams,
+  getPaginatedResponse,
+} = require("../utils/pagination.util");
 
 exports.createCustomer = async (req, res) => {
   try {
@@ -20,16 +24,51 @@ exports.createCustomer = async (req, res) => {
 
 exports.searchCustomers = async (req, res) => {
   try {
-    const customers = await customerService.searchCustomers(req.query.q);
-    res.json(customers);
+    const paginationParams = getPaginationParams(req.query);
+    const result = await customerService.searchCustomers(
+      req.query.q,
+      paginationParams,
+    );
+
+    if (Array.isArray(result)) {
+      // No pagination data
+      res.json(result);
+    } else if (result.customers) {
+      // Pagination enabled
+      res.json(
+        getPaginatedResponse(
+          result.customers,
+          result.total,
+          paginationParams.page,
+          paginationParams.limit,
+        ),
+      );
+    } else {
+      res.json(result);
+    }
   } catch {
     res.status(500).json({ message: "Failed to search customers" });
   }
 };
 
 exports.getCustomers = async (req, res) => {
-  const customers = await customerService.getCustomers(req.user);
-  res.json(customers);
+  const paginationParams = getPaginationParams(req.query);
+  const result = await customerService.getCustomers(req.user, paginationParams);
+
+  if (result.rows) {
+    // Pagination with findAndCountAll
+    res.json(
+      getPaginatedResponse(
+        result.rows,
+        result.count,
+        paginationParams.page,
+        paginationParams.limit,
+      ),
+    );
+  } else {
+    // Legacy response
+    res.json(result);
+  }
 };
 
 exports.updateCustomer = async (req, res) => {
@@ -60,8 +99,26 @@ exports.getMe = async (req, res) => {
 
 exports.getMyBookings = async (req, res) => {
   try {
-    const data = await customerService.getMyBookings(req.user);
-    res.json(data);
+    const paginationParams = getPaginationParams(req.query);
+    const result = await customerService.getMyBookings(
+      req.user,
+      paginationParams,
+    );
+
+    if (result.rows) {
+      // Pagination enabled
+      res.json(
+        getPaginatedResponse(
+          result.rows,
+          result.count,
+          paginationParams.page,
+          paginationParams.limit,
+        ),
+      );
+    } else {
+      // Legacy response
+      res.json(result);
+    }
   } catch (e) {
     res.status(400).json({ message: e.message });
   }
@@ -69,11 +126,27 @@ exports.getMyBookings = async (req, res) => {
 
 exports.getBookingTests = async (req, res) => {
   try {
-    const data = await customerService.getBookingTests(
+    const paginationParams = getPaginationParams(req.query);
+    const result = await customerService.getBookingTests(
       req.params.bookingId,
       req.user,
+      paginationParams,
     );
-    res.json(data);
+
+    if (result.rows) {
+      // Pagination enabled
+      res.json(
+        getPaginatedResponse(
+          result.rows,
+          result.count,
+          paginationParams.page,
+          paginationParams.limit,
+        ),
+      );
+    } else {
+      // Legacy response
+      res.json(result);
+    }
   } catch (e) {
     res.status(403).json({ message: e.message });
   }
@@ -81,11 +154,27 @@ exports.getBookingTests = async (req, res) => {
 
 exports.getBookingReports = async (req, res) => {
   try {
-    const data = await customerService.getBookingReports(
+    const paginationParams = getPaginationParams(req.query);
+    const result = await customerService.getBookingReports(
       req.params.bookingId,
       req.user,
+      paginationParams,
     );
-    res.json(data);
+
+    if (result.rows) {
+      // Pagination enabled
+      res.json(
+        getPaginatedResponse(
+          result.rows,
+          result.count,
+          paginationParams.page,
+          paginationParams.limit,
+        ),
+      );
+    } else {
+      // Legacy response
+      res.json(result);
+    }
   } catch (e) {
     res.status(403).json({ message: e.message });
   }
@@ -93,11 +182,27 @@ exports.getBookingReports = async (req, res) => {
 
 exports.getBookingPayments = async (req, res) => {
   try {
-    const data = await customerService.getBookingPayments(
+    const paginationParams = getPaginationParams(req.query);
+    const result = await customerService.getBookingPayments(
       req.params.bookingNumber,
       req.user,
+      paginationParams,
     );
-    res.json(data);
+
+    if (result.rows) {
+      // Pagination enabled
+      res.json(
+        getPaginatedResponse(
+          result.rows,
+          result.count,
+          paginationParams.page,
+          paginationParams.limit,
+        ),
+      );
+    } else {
+      // Legacy response
+      res.json(result);
+    }
   } catch (e) {
     res.status(403).json({ message: e.message });
   }

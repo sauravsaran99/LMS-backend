@@ -1,5 +1,9 @@
 const bookingService = require("../services/booking.service");
 const { createBookingSchema } = require("../validators/booking.validator");
+const {
+  getPaginationParams,
+  getPaginatedResponse,
+} = require("../utils/pagination.util");
 
 exports.createBooking = async (req, res) => {
   try {
@@ -50,12 +54,27 @@ exports.getBookings = async (req, res, next) => {
       return res.status(400).json({ message: "Status is required" });
     }
 
-    const bookings = await bookingService.getBookingsByStatus({
+    const paginationParams = getPaginationParams(req.query);
+    const result = await bookingService.getBookingsByStatus({
       status,
       user: req.user,
+      pagination: paginationParams,
     });
 
-    res.json(bookings);
+    if (result.bookings) {
+      // Pagination is enabled
+      res.json(
+        getPaginatedResponse(
+          result.bookings,
+          result.total,
+          paginationParams.page,
+          paginationParams.limit,
+        ),
+      );
+    } else {
+      // Legacy response without pagination
+      res.json(result);
+    }
   } catch (err) {
     next(err);
   }
