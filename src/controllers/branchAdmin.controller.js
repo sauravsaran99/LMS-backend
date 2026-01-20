@@ -41,3 +41,37 @@ exports.toggleUserStatus = async (req, res) => {
     res.status(400).json({ message: e.message });
   }
 };
+
+exports.createBranchAdmin = async (req, res) => {
+  try {
+    const result = await branchAdminService.createBranchAdmin(
+      req.body,
+      req.user,
+    );
+    res.json(result);
+  } catch (e) {
+    res.status(400).json({ message: e.message });
+  }
+};
+
+exports.getBranchAdmins = async (req, res) => {
+  try {
+    const pagination = getPaginationParams(req.query);
+    const result = await branchAdminService.getBranchAdmins(pagination);
+
+    if (result.users) {
+      return res.json(
+        getPaginatedResponse(
+          result.users,
+          result.total,
+          pagination.page,
+          pagination.limit,
+        ),
+      );
+    }
+
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};

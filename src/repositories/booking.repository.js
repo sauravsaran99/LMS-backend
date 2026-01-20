@@ -272,6 +272,22 @@ class BookingRepository {
       where: { booking_number: bookingNumber },
     });
   }
+
+  async findBookingsForCustomerOnDate(customerId, date) {
+    return Booking.findAll({
+      where: {
+        customer_id: customerId,
+        scheduled_date: date,
+        status: { [Op.ne]: "CANCELLED" },
+      },
+      include: [
+        {
+          model: BookingTest,
+          attributes: ["test_id"],
+        },
+      ],
+    });
+  }
 }
 
 module.exports = new BookingRepository();

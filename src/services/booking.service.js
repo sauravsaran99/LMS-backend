@@ -29,6 +29,28 @@ class BookingService {
       const customer = await bookingRepo.getCustomerById(customer_id);
       if (!customer) throw new Error("Customer not found");
 
+      // ❗ STEP 1.5: Prevent duplicate booking for same customer & date
+      const existingBookings = await bookingRepo.findBookingsForCustomerOnDate(
+        customer_id,
+        scheduled_date,
+      );
+
+      if (existingBookings.length) {
+        const requestedTestIds = test_ids.map(Number).sort().join(",");
+
+        for (const booking of existingBookings) {
+          const bookedTestIds = booking.BookingTests.map((bt) => bt.test_id)
+            .sort()
+            .join(",");
+
+          if (requestedTestIds === bookedTestIds) {
+            throw new Error(
+              "Same tests already booked for this customer on the selected date",
+            );
+          }
+        }
+      }
+
       // 2. Fetch tests
       const tests = await bookingRepo.getTestsByIds(test_ids);
       if (!tests.length) throw new Error("No valid tests selected");

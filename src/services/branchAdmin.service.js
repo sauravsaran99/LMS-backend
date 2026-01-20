@@ -1,4 +1,5 @@
 const { User, AuditLog, Role } = require("../models");
+const userRepository = require("../repositories/user.repository");
 
 class BranchAdminService {
   async getUsers(admin, pagination = null) {
@@ -111,6 +112,77 @@ class BranchAdminService {
       user_id: admin.id,
       role: admin.role,
       branch_id: admin.base_branch_id,
+    });
+  }
+
+  async createBranchAdmin(payload, user) {
+    const t = await sequelize.transaction();
+
+    try {
+      const { name, email, password, base_branch_id } = payload;
+
+      if (!base_branch_id) {
+        throw new Error("Branch is required");
+      }
+
+      const branchAdminRole = await Role.findOne({
+        where: { name: "BRANCH_ADMIN" },
+      });
+
+      if (!branchAdminRole) {
+        throw new Error("BRANCH_ADMIN role not found");
+      }
+
+      const admin = await userRepository.create(
+        {
+          name,
+          email,
+          password,
+          role_id: branchAdminRole.id,
+          base_branch_id,
+          status: "ACTIVE",
+        },
+        t,
+      );
+
+      await t.commit();
+      return admin;
+    } catch (e) {
+      await t.rollback();
+      throw e;
+    }
+  }
+
+  async getBranchAdmins(pagination = null) {
+    return userRepository.findByRoleName(
+      "BRANCH_ADMIN",
+      null, // ❗ Super admin sees all branch admins
+      pagination,
+    );
+  }
+
+  async createBranchAdmin(payload) {
+    const { name, email, password, base_branch_id } = payload;
+
+    if (!base_branch_id) {
+      throw new Error("Branch is required");
+    }
+
+    const branchAdminRole = await Role.findOne({
+      where: { name: "BRANCH_ADMIN" },
+    });
+
+    if (!branchAdminRole) {
+      throw new Error("BRANCH_ADMIN role not found");
+    }
+
+    return userRepository.create({
+      name,
+      email,
+      password,
+      role_id: branchAdminRole.id,
+      base_branch_id,
+      status: "ACTIVE",
     });
   }
 }
