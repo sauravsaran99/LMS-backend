@@ -27,17 +27,10 @@ const sequelize = new Sequelize(
     dialect: "mysql",
     logging: false,
     pool: {
-      max: 5,
+      max: 3,
       min: 0,
-      acquire: 60000,
+      acquire: 30000,
       idle: 10000,
-    },
-    dialectOptions: {
-      connectTimeout: 60000,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
     },
   },
 );
