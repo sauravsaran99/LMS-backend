@@ -88,14 +88,84 @@ class PaymentService {
     };
   }
 
-  async getBookingPayments(pagination = null) {
-    const bookings = await paymentRepo.getBookingPaymentSummary(pagination);
+  // async getBookingPayments(pagination = null) {
+  //   const bookings = await paymentRepo.getBookingPaymentSummary(pagination);
+
+  //   let result = [];
+
+  //   // Check if pagination is being used
+  //   if (bookings.bookings) {
+  //     // Pagination enabled - bookings is { bookings, total }
+  //     for (const b of bookings.bookings) {
+  //       const totalPaid = Number(b.total_paid || 0);
+  //       const totalRefunded = Number(b.total_refunded || 0);
+  //       const netPaid = totalPaid - totalRefunded;
+  //       const balance = Number(b.final_amount) - netPaid;
+
+  //       let payment_status = "PENDING";
+  //       if (netPaid > 0 && balance > 0) payment_status = "PARTIAL";
+  //       if (balance === 0) payment_status = "PAID";
+
+  //       const payments = await paymentRepo.getPaymentsByBooking(
+  //         b.booking_number,
+  //       );
+
+  //       result.push({
+  //         booking_number: b.booking_number,
+  //         final_amount: Number(b.final_amount),
+  //         total_paid: totalPaid,
+  //         total_refunded: totalRefunded,
+  //         balance,
+  //         payment_status,
+  //         payments: Array.isArray(payments)
+  //           ? payments
+  //           : payments.payments || [],
+  //       });
+  //     }
+  //     return { data: result, total: bookings.total };
+  //   } else {
+  //     // Legacy response - bookings is array
+  //     for (const b of bookings) {
+  //       const totalPaid = Number(b.total_paid || 0);
+  //       const totalRefunded = Number(b.total_refunded || 0);
+  //       const netPaid = totalPaid - totalRefunded;
+  //       const balance = Number(b.final_amount) - netPaid;
+
+  //       let payment_status = "PENDING";
+  //       if (netPaid > 0 && balance > 0) payment_status = "PARTIAL";
+  //       if (balance === 0) payment_status = "PAID";
+
+  //       const payments = await paymentRepo.getPaymentsByBooking(
+  //         b.booking_number,
+  //       );
+
+  //       result.push({
+  //         booking_number: b.booking_number,
+  //         final_amount: Number(b.final_amount),
+  //         total_paid: totalPaid,
+  //         total_refunded: totalRefunded,
+  //         balance,
+  //         payment_status,
+  //         payments: Array.isArray(payments)
+  //           ? payments
+  //           : payments.payments || [],
+  //       });
+  //     }
+
+  //     return result;
+  //   }
+  // }
+
+  async getBookingPayments(pagination = null, user) {
+    const bookings = await paymentRepo.getBookingPaymentSummary(
+      pagination,
+      user, // ✅ ONLY ADD THIS
+    );
 
     let result = [];
 
-    // Check if pagination is being used
+    // ⛔ BELOW CODE UNCHANGED
     if (bookings.bookings) {
-      // Pagination enabled - bookings is { bookings, total }
       for (const b of bookings.bookings) {
         const totalPaid = Number(b.total_paid || 0);
         const totalRefunded = Number(b.total_refunded || 0);
@@ -123,37 +193,32 @@ class PaymentService {
         });
       }
       return { data: result, total: bookings.total };
-    } else {
-      // Legacy response - bookings is array
-      for (const b of bookings) {
-        const totalPaid = Number(b.total_paid || 0);
-        const totalRefunded = Number(b.total_refunded || 0);
-        const netPaid = totalPaid - totalRefunded;
-        const balance = Number(b.final_amount) - netPaid;
-
-        let payment_status = "PENDING";
-        if (netPaid > 0 && balance > 0) payment_status = "PARTIAL";
-        if (balance === 0) payment_status = "PAID";
-
-        const payments = await paymentRepo.getPaymentsByBooking(
-          b.booking_number,
-        );
-
-        result.push({
-          booking_number: b.booking_number,
-          final_amount: Number(b.final_amount),
-          total_paid: totalPaid,
-          total_refunded: totalRefunded,
-          balance,
-          payment_status,
-          payments: Array.isArray(payments)
-            ? payments
-            : payments.payments || [],
-        });
-      }
-
-      return result;
     }
+
+    for (const b of bookings) {
+      const totalPaid = Number(b.total_paid || 0);
+      const totalRefunded = Number(b.total_refunded || 0);
+      const netPaid = totalPaid - totalRefunded;
+      const balance = Number(b.final_amount) - netPaid;
+
+      let payment_status = "PENDING";
+      if (netPaid > 0 && balance > 0) payment_status = "PARTIAL";
+      if (balance === 0) payment_status = "PAID";
+
+      const payments = await paymentRepo.getPaymentsByBooking(b.booking_number);
+
+      result.push({
+        booking_number: b.booking_number,
+        final_amount: Number(b.final_amount),
+        total_paid: totalPaid,
+        total_refunded: totalRefunded,
+        balance,
+        payment_status,
+        payments: Array.isArray(payments) ? payments : payments.payments || [],
+      });
+    }
+
+    return result;
   }
 }
 

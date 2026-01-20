@@ -15,31 +15,87 @@ class PaymentRepository {
     return Payment.create(data, { transaction });
   }
 
-  async getBookingPaymentSummary(pagination = null) {
+  // async getBookingPaymentSummary(pagination = null) {
+  //   const options = {
+  //     attributes: [
+  //       "booking_number",
+  //       "final_amount",
+  //       [
+  //         Sequelize.literal(`(
+  //           SELECT COALESCE(SUM(amount), 0)
+  //           FROM payments p
+  //           WHERE p.booking_number = Booking.booking_number
+  //         )`),
+  //         "total_paid",
+  //       ],
+  //       [
+  //         Sequelize.literal(`(
+  //           SELECT COALESCE(SUM(amount), 0)
+  //           FROM refunds r
+  //           WHERE r.booking_number = Booking.booking_number
+  //         )`),
+  //         "total_refunded",
+  //       ],
+  //     ],
+  //     order: [["created_at", "DESC"]],
+  //     raw: true,
+  //   };
+
+  //   if (pagination) {
+  //     options.limit = pagination.limit;
+  //     options.offset = pagination.offset;
+  //   }
+
+  //   if (pagination) {
+  //     const total = await Booking.count();
+  //     const bookings = await Booking.findAll(options);
+  //     return { bookings, total };
+  //   }
+
+  //   return Booking.findAll(options);
+  // }
+
+  async getBookingPaymentSummary(pagination = null, user) {
     const options = {
       attributes: [
         "booking_number",
         "final_amount",
         [
           Sequelize.literal(`(
-            SELECT COALESCE(SUM(amount), 0)
-            FROM payments p
-            WHERE p.booking_number = Booking.booking_number
-          )`),
+          SELECT COALESCE(SUM(amount), 0)
+          FROM payments p
+          WHERE p.booking_number = Booking.booking_number
+        )`),
           "total_paid",
         ],
         [
           Sequelize.literal(`(
-            SELECT COALESCE(SUM(amount), 0)
-            FROM refunds r
-            WHERE r.booking_number = Booking.booking_number
-          )`),
+          SELECT COALESCE(SUM(amount), 0)
+          FROM refunds r
+          WHERE r.booking_number = Booking.booking_number
+        )`),
           "total_refunded",
         ],
       ],
       order: [["created_at", "DESC"]],
       raw: true,
+      where: {}, // ✅ ADD
     };
+
+    // 🔐 ROLE-BASED FILTER (ONLY THIS LOGIC)
+    if (user) {
+      if (["BRANCH_ADMIN", "RECEPTIONIST"].includes(user.role)) {
+        options.where.branch_id = user.base_branch_id;
+      }
+
+      if (user.role === "TECHNICIAN") {
+        options.where.technician_id = user.id;
+      }
+
+      if (user.role === "CUSTOMER") {
+        options.where.customer_id = user.customer_id;
+      }
+    }
 
     if (pagination) {
       options.limit = pagination.limit;
@@ -47,7 +103,7 @@ class PaymentRepository {
     }
 
     if (pagination) {
-      const total = await Booking.count();
+      const total = await Booking.count({ where: options.where });
       const bookings = await Booking.findAll(options);
       return { bookings, total };
     }
