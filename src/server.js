@@ -1,3 +1,5 @@
+throw new Error("Intentional CI failure for testing");
+
 const app = require("./app");
 const { sequelize } = require("./models");
 const seedRoles = require("./seeders/role.seeder");
