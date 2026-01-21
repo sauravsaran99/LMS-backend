@@ -6,10 +6,7 @@ const seedSuperAdmin = require("./seeders/superAdmin.seeder");
 const seedTechnicians = require("./seeders/seed-technicians");
 const seedBranchAdmin = require("./seeders/seedBranchAdmins");
 
-// require("dotenv").config();
-
-//trying to push in main
-slfd;
+require("dotenv").config();
 
 const PORT = process.env.PORT || 5000;
 
