@@ -22,7 +22,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://lms-frontend-iota-wine.vercel.app", // TailAdmin Vite default
+    origin: [
+      "https://lms-frontend-git-main-thisissauravkumars-projects.vercel.app",
+      "http://localhost:5173",
+    ],
     credentials: true, // 🔥 REQUIRED for cookies
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
