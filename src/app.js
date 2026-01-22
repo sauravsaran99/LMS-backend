@@ -23,7 +23,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://lms-frontend-git-main-thisissauravkumars-projects.vercel.app",
+      // "https://lms-frontend-git-main-thisissauravkumars-projects.vercel.app",
       "https://lms-frontend-iota-wine.vercel.app/",
       "http://localhost:5173",
     ],
