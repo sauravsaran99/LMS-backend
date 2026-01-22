@@ -16,25 +16,19 @@ const branchAdminRoutes = require("./routes/branchAdmin.routes");
 const refundRoutes = require("./routes/refund.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 
-const cookieParser = require("cookie-parser");
 
 const app = express();
 
 app.use(
   cors({
     origin: [
-      // "https://lms-frontend-git-main-thisissauravkumars-projects.vercel.app",
       "https://lms-frontend-iota-wine.vercel.app",
       "http://localhost:5173",
     ],
-    credentials: true, // 🔥 REQUIRED for cookies
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+  })
 );
-
-// app.use(cors());
-app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

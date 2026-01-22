@@ -12,16 +12,7 @@ exports.login = async (req, res) => {
     }
 
     const { token, user } = await authService.login(value);
-
-    res.cookie("access_token", token, {
-      httpOnly: true,
-      secure: true, // true in production (HTTPS)
-      sameSite: "none",
-      // sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-
-    res.json({ user });
+    res.json({ user, token });
   } catch (err) {
     res.status(401).json({ message: err.message });
   }
@@ -33,12 +24,7 @@ exports.login = async (req, res) => {
 // };
 
 exports.logout = async (req, res) => {
-  res.clearCookie("access_token", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-  });
-
+  // For token-based auth, logout is handled on client by deleting token
   res.status(200).json({ message: "Logged out successfully" });
 };
 
