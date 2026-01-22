@@ -27,9 +27,19 @@ exports.login = async (req, res) => {
   }
 };
 
+// exports.logout = async (req, res) => {
+//   res.clearCookie("access_token");
+//   res.json({ message: "Logged out successfully" });
+// };
+
 exports.logout = async (req, res) => {
-  res.clearCookie("access_token");
-  res.json({ message: "Logged out successfully" });
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
+
+  res.status(200).json({ message: "Logged out successfully" });
 };
 
 exports.me = async (req, res) => {
