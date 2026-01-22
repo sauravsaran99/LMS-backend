@@ -24,7 +24,7 @@ app.use(
   cors({
     origin: [
       // "https://lms-frontend-git-main-thisissauravkumars-projects.vercel.app",
-      "https://lms-frontend-iota-wine.vercel.app/",
+      "https://lms-frontend-iota-wine.vercel.app",
       "http://localhost:5173",
     ],
     credentials: true, // 🔥 REQUIRED for cookies
