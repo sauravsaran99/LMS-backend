@@ -3,9 +3,9 @@ require("dotenv").config();
 
 module.exports = async (req, res, next) => {
   try {
-    const token = req.cookies.access_token;
-
-    console.log('token', token)
+    // Get token from Authorization header: 'Bearer <token>'
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[0] === 'Bearer' ? authHeader.split(' ')[1] : null;
 
     if (!token) {
       return res.status(401).json({ message: "Unauthorized" });

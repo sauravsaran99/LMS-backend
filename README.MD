@@ -186,14 +186,44 @@ mkdir -p uploads/payments uploads/reports
 
 ---
 
-## 🧪 API Testing
 
-Use Postman or Thunder Client
-All protected routes require:
+## 🧪 API Authentication (Token-based)
+
+All authentication is handled using JWT tokens. Cookies are NOT used for authentication.
+
+### Login
+
+Send a POST request to `/auth/login` with email and password:
+
+```
+POST /auth/login
+Content-Type: application/json
+
+{
+    "email": "admin@lms.com",
+    "password": "Admin@123"
+}
+```
+
+**Response:**
+```
+{
+    "user": { ... },
+    "token": "<JWT_TOKEN>"
+}
+```
+
+### Using the Token
+
+For all protected routes, add this header:
 
 ```
 Authorization: Bearer <JWT_TOKEN>
 ```
+
+### Logout
+
+Logout is handled on the client by deleting the stored token. There is no server-side session or cookie to clear.
 
 ---
 
