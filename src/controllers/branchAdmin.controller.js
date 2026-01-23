@@ -42,6 +42,15 @@ exports.toggleUserStatus = async (req, res) => {
   }
 };
 
+exports.updateBranchUser = async (req, res) => {
+  try {
+    const user = await branchAdminService.updateUser(req.params.id, req.body, req.user);
+    res.json(user);
+  } catch (e) {
+    res.status(400).json({ message: e.message });
+  }
+};
+
 exports.createBranchAdmin = async (req, res) => {
   try {
     const result = await branchAdminService.createBranchAdmin(

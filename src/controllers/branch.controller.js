@@ -51,29 +51,7 @@ exports.createBranch = async (req, res) => {
   }
 };
 
-exports.getBranches = async (req, res) => {
-  try {
-    const paginationParams = getPaginationParams(req.query);
-    const result = await branchService.getAllBranches(paginationParams);
 
-    if (result.branches) {
-      // Pagination enabled
-      res.json(
-        getPaginatedResponse(
-          result.branches,
-          result.total,
-          paginationParams.page,
-          paginationParams.limit,
-        ),
-      );
-    } else {
-      // Legacy response
-      res.json(result);
-    }
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch branches" });
-  }
-};
 
 exports.updateBranch = async (req, res) => {
   try {

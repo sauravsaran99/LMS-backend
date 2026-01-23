@@ -5,7 +5,7 @@ const branchController = require("../controllers/branch.controller");
 const auth = require("../middlewares/auth.middleware");
 const authorize = require("../middlewares/role.middleware");
 
-router.use(auth, authorize(['SUPER_ADMIN']));
+router.use(auth, authorize(['SUPER_ADMIN', 'BRANCH_ADMIN']));
 
 router.post('/', branchController.createBranch);
 router.get('/', branchController.getBranches);

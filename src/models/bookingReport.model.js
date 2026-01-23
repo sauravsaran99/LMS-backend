@@ -29,6 +29,11 @@ const BookingReport = sequelize.define(
       type: DataTypes.ENUM("TECHNICIAN"),
       allowNull: false,
     },
+
+    tagged_doctor_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
   },
   {
     tableName: "booking_reports",

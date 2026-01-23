@@ -95,14 +95,14 @@ class CustomerService {
   getCustomers(user, pagination = null) {
     if (pagination) {
       return Customer.findAndCountAll({
-        where: { base_branch_id: user.base_branch_id },
+        // where: { base_branch_id: user.base_branch_id },
         order: [["created_at", "DESC"]],
         limit: pagination.limit,
         offset: pagination.offset,
       });
     }
     return Customer.findAll({
-      where: { base_branch_id: user.base_branch_id },
+      // where: { base_branch_id: user.base_branch_id },
       order: [["created_at", "DESC"]],
     });
   }

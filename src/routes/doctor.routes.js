@@ -15,7 +15,7 @@ router.post(
 
 router.get(
   '/',
-  authorize(['SUPER_ADMIN', 'BRANCH_ADMIN']),
+  authorize(['SUPER_ADMIN', 'BRANCH_ADMIN', 'TECHNICIAN']),
   doctorController.getAllDoctors
 );
 
