@@ -15,6 +15,8 @@ const auditLogRoutes = require("./routes/auditLog.routes");
 const branchAdminRoutes = require("./routes/branchAdmin.routes");
 const refundRoutes = require("./routes/refund.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
+const blogRoutes = require("./routes/blog.routes");
+const contactRoutes = require("./routes/contact.routes");
 
 
 const app = express();
@@ -24,7 +26,7 @@ app.use(
     origin: [
       "https://lms-frontend-iota-wine.vercel.app",
       "http://localhost:5173",
-       "http://localhost:5174",
+      "http://localhost:5174",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -51,5 +53,7 @@ app.use("/audit-logs", auditLogRoutes);
 app.use("/branch-admin", branchAdminRoutes);
 app.use("/refunds", refundRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/blogs", blogRoutes);
+app.use("/contacts", contactRoutes);
 
 module.exports = app;
