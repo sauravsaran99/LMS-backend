@@ -13,6 +13,9 @@ const Booking = require("./booking.model");
 const BookingTest = require("./bookingTest.model");
 const Payment = require("./payment.model");
 const Refund = require("./refund.model");
+const Blog = require("./blog.model");
+const ContactQuery = require("./contactQuery.model.js");
+
 // Associations
 Role.hasMany(User, { foreignKey: "role_id" });
 User.belongsTo(Role, { foreignKey: "role_id" });
@@ -89,4 +92,6 @@ module.exports = {
   BookingTest,
   Payment,
   Refund,
+  Blog,
+  ContactQuery,
 };
