@@ -31,6 +31,13 @@ Branch.belongsToMany(User, {
   foreignKey: "branch_id",
 });
 
+// Explicit associations for UserBranch accessibility
+User.hasMany(UserBranch, { foreignKey: "user_id" });
+UserBranch.belongsTo(User, { foreignKey: "user_id" });
+
+Branch.hasMany(UserBranch, { foreignKey: "branch_id" });
+UserBranch.belongsTo(Branch, { foreignKey: "branch_id" });
+
 // Booking relations
 Booking.belongsTo(Customer, { foreignKey: "customer_id" });
 Customer.hasMany(Booking, { foreignKey: "customer_id" });

@@ -10,6 +10,7 @@ router.use(auth, authorize(["BRANCH_ADMIN", "SUPER_ADMIN"]));
 router.get("/users", controller.getBranchUsers);
 router.post("/users", controller.createBranchUser);
 router.patch("/users/:id/status", controller.toggleUserStatus);
+router.put("/users/:id", controller.updateBranchUser);
 router.post("/", controller.createBranchAdmin);
 
 router.get("/", controller.getBranchAdmins);

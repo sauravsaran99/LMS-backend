@@ -267,7 +267,7 @@ class BookingService {
     return bookingRepo.findCompletedForTechnician(user.id, pagination);
   }
 
-  async uploadTestReport(bookingId, filePath, user) {
+  async uploadTestReport(bookingId, filePath, user, taggedDoctorId = null) {
     if (user.role !== "TECHNICIAN") {
       throw new Error("Unauthorized");
     }
@@ -288,6 +288,7 @@ class BookingService {
       file_url: filePath,
       uploaded_by_user_id: user.id,
       uploaded_by_role: "TECHNICIAN",
+      tagged_doctor_id: taggedDoctorId,
     });
 
     await AuditLog.create({
@@ -295,7 +296,7 @@ class BookingService {
       action_type: "CREATE",
       entity: "BOOKING_REPORT",
       entity_id: report.id,
-      new_value: { file_url: filePath },
+      new_value: { file_url: filePath, tagged_doctor_id: taggedDoctorId },
       user_id: user.id,
       role: user.role,
       branch_id: booking.branch_id,

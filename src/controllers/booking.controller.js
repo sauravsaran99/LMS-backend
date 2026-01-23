@@ -86,10 +86,13 @@ exports.uploadTestReport = async (req, res) => {
       return res.status(400).json({ message: "Report file is required" });
     }
 
+    const { tagged_doctor_id } = req.body;
+
     const report = await bookingService.uploadTestReport(
       req.params.id,
       req.file.path,
       req.user,
+      tagged_doctor_id
     );
 
     res.json({
