@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const testRoutes = require("./routes/test.routes");
 const doctorRoutes = require("./routes/doctor.routes");
 const customerRoutes = require("./routes/customer.routes");
@@ -38,6 +39,11 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "LMS Backend is running" });
 });
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "..", "uploads"))
+);
 app.use("/tests", testRoutes);
 app.use("/doctors", doctorRoutes);
 app.use("/customers", customerRoutes);

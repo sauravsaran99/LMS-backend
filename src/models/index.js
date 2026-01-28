@@ -71,8 +71,15 @@ User.belongsTo(Role, { foreignKey: "role_id" });
 Role.hasMany(User, { foreignKey: "role_id" });
 
 // Booking ↔ BookingTest
-Booking.hasMany(BookingTest, { foreignKey: "booking_id" });
-BookingTest.belongsTo(Booking, { foreignKey: "booking_id" });
+Booking.hasMany(BookingTest, {
+  as: "bookingTests",
+  foreignKey: "booking_id",
+});
+
+BookingTest.belongsTo(Booking, {
+  foreignKey: "booking_id",
+});
+
 
 Test.hasMany(BookingTest, { foreignKey: "test_id" });
 BookingTest.belongsTo(Test, { foreignKey: "test_id" });

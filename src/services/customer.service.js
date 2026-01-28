@@ -160,43 +160,54 @@ class CustomerService {
     });
   }
 
-  async getMyBookings(user, pagination = null) {
-    const customer = await Customer.findOne({
-      where: { user_id: user.id },
-    });
+async getMyBookings(user, pagination = null) {
+  const customer = await Customer.findOne({
+    where: { user_id: user.id },
+  });
 
-    if (!customer) throw new Error("Customer profile not found");
+  if (!customer) throw new Error("Customer profile not found");
 
-    const options = {
-      where: { customer_id: customer.id },
-      order: [["created_at", "DESC"]],
-      include: [
-        {
-          model: BookingTest,
-          attributes: [], // important: don't fetch rows
-        },
-      ],
-      attributes: {
-        include: [
-          [
-            sequelize.fn("COUNT", sequelize.col("BookingTests.id")),
-            "tests_count",
-          ],
-        ],
+  const options = {
+    where: { customer_id: customer.id },
+    order: [["created_at", "DESC"]],
+
+    include: [
+      {
+        model: BookingTest,
+        as: "bookingTests",
+        attributes: [],        // ❗ do NOT select id
+        required: false,
       },
-      group: ["Booking.id"],
-    };
+    ],
 
-    if (pagination) {
-      options.limit = pagination.limit;
-      options.offset = pagination.offset;
-      const result = await Booking.findAndCountAll(options);
-      return result;
-    }
+    attributes: {
+      include: [
+        [
+          sequelize.fn(
+            "COUNT",
+            sequelize.fn(
+              "DISTINCT",
+              sequelize.col("bookingTests.id"),
+            ),
+          ),
+          "tests_count",
+        ],
+      ],
+    },
 
-    const bookings = await Booking.findAll(options);
-    return bookings;
+    group: ["Booking.id"],
+    subQuery: false,
+  };
+
+  if (pagination) {
+    options.limit = pagination.limit;
+    options.offset = pagination.offset;
+    return Booking.findAndCountAll(options);
   }
+
+  return Booking.findAll(options);
+}
+
 
   async getBookingTests(bookingId, user, pagination = null) {
     const customer = await Customer.findOne({
