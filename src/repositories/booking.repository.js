@@ -283,6 +283,7 @@ class BookingRepository {
       include: [
         {
           model: BookingTest,
+          as: "bookingTests",
           attributes: ["test_id"],
         },
       ],

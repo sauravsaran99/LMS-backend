@@ -33,7 +33,6 @@ const Customer = sequelize.define(
     phone: {
       type: DataTypes.STRING(20),
       allowNull: false,
-      unique: true,
     },
 
     address: {

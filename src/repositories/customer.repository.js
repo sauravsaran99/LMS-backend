@@ -7,8 +7,24 @@ class CustomerRepository {
     return Customer.findOne({ where: { phone } });
   }
 
+  async findByNameAndPhone(name, phone) {
+  const user = await Customer.findOne({
+    where: {
+      name,
+      phone,
+    },
+  });
+
+  return user;
+}
+
+
   async create(data) {
-    return Customer.create(data);
+    const dataUser = await  Customer.create(data);
+
+    console.log('dataUser', dataUser )
+
+    return dataUser;
   }
 
   async search(query, pagination = null) {
