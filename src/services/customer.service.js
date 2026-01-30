@@ -17,10 +17,17 @@ class CustomerService {
     const t = await sequelize.transaction();
 
     try {
-      const existing = await customerRepo.findByPhone(payload.phone);
+      const existing = await customerRepo.findByNameAndPhone(
+  payload.name,
+  payload.phone
+);
+
+console.log('existing', existing)
+
       if (existing) {
-        throw new Error("Customer with this phone already exists");
+        throw new Error("Customer with same name and phone already exists");
       }
+      
 
       let baseBranchId;
       if (user.role === "SUPER_ADMIN") {
@@ -42,8 +49,16 @@ class CustomerService {
         throw new Error("CUSTOMER role not found");
       }
 
-      const email = `${payload.phone}@lms.com`;
+      
+   const normalizedName = payload.name
+  .toLowerCase()
+  .replace(/\s+/g, ""); // remove all spaces
+
+     const email = `${normalizedName}.${payload.phone}@lms.com`;
+
       const rawPassword = "Admin@123";
+
+  
 
       const userRecord = await userRepo.create(
         {
@@ -57,6 +72,8 @@ class CustomerService {
         t,
       );
 
+          console.log('existing1', userRecord)
+
       const customer = await customerRepo.create(
         {
           name: payload.name,
@@ -69,6 +86,8 @@ class CustomerService {
         },
         t,
       );
+
+      console.log('existing2', customer)
 
       await t.commit();
 
