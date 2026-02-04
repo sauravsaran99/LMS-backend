@@ -66,11 +66,19 @@ class ReportRepository {
 
 
 
-  async getBranchWiseMonthly({ fromDate, toDate }) {
-    console.log('fromDate, toDate', fromDate, toDate);
+  async getBranchWiseMonthly({ fromDate, toDate, branchId }) {
+    console.log('fromDate, toDate, branchId', fromDate, toDate, branchId);
 
     if (!fromDate || !toDate) {
       throw new Error("fromDate and toDate are required");
+    }
+
+    let whereClause = "";
+    const replacements = { fromDate, toDate };
+
+    if (branchId) {
+      whereClause = `WHERE br.id = :branchId`;
+      replacements.branchId = branchId;
     }
 
     const [rows] = await sequelize.query(`
@@ -120,10 +128,12 @@ class ReportRepository {
       GROUP BY booking_number
     ) r ON r.booking_number = b.booking_number
 
+    ${whereClause}
+
     GROUP BY br.id, br.name
     ORDER BY br.name ASC
   `, {
-      replacements: { fromDate, toDate }
+      replacements
     });
 
     return rows;
@@ -132,9 +142,17 @@ class ReportRepository {
 
 
 
-  async getTechnicianWiseMonthly({ fromDate, toDate }) {
+  async getTechnicianWiseMonthly({ fromDate, toDate, branchId }) {
     if (!fromDate || !toDate) {
       throw new Error("fromDate and toDate are required");
+    }
+
+    let whereClause = `WHERE DATE(b.created_at) BETWEEN :fromDate AND :toDate`;
+    const replacements = { fromDate, toDate };
+
+    if (branchId) {
+      whereClause += ` AND b.branch_id = :branchId`;
+      replacements.branchId = branchId;
     }
 
     const [rows] = await sequelize.query(`
@@ -176,11 +194,11 @@ class ReportRepository {
       GROUP BY booking_number
     ) r ON r.booking_number = b.booking_number
 
-    WHERE DATE(b.created_at) BETWEEN :fromDate AND :toDate
+    ${whereClause}
     GROUP BY u.id, u.name
     ORDER BY u.name ASC
   `, {
-      replacements: { fromDate, toDate }
+      replacements
     });
 
     return rows;
@@ -189,9 +207,17 @@ class ReportRepository {
 
 
 
-  async getTestWiseMonthly({ fromDate, toDate }) {
+  async getTestWiseMonthly({ fromDate, toDate, branchId }) {
     if (!fromDate || !toDate) {
       throw new Error("fromDate and toDate are required");
+    }
+
+    let whereClause = `WHERE DATE(b.created_at) BETWEEN :fromDate AND :toDate`;
+    const replacements = { fromDate, toDate };
+
+    if (branchId) {
+      whereClause += ` AND b.branch_id = :branchId`;
+      replacements.branchId = branchId;
     }
 
     const [rows] = await sequelize.query(`
@@ -223,12 +249,12 @@ class ReportRepository {
     JOIN bookings b ON b.id = bt.booking_id
     JOIN tests t ON t.id = bt.test_id
 
-    WHERE DATE(b.created_at) BETWEEN :fromDate AND :toDate
+    ${whereClause}
 
     GROUP BY t.id, t.name
     ORDER BY t.name ASC
   `, {
-      replacements: { fromDate, toDate }
+      replacements
     });
 
     return rows;
