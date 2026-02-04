@@ -20,8 +20,8 @@ const Customer = sequelize.define(
       allowNull: false,
     },
 
-    age: {
-      type: DataTypes.INTEGER,
+    dob: {
+      type: DataTypes.DATEONLY,
       allowNull: true,
     },
 
@@ -35,14 +35,50 @@ const Customer = sequelize.define(
       allowNull: false,
     },
 
+    profile_image: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
     address: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    pincode: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+    },
+
+    city: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+
+    state: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+
+    country: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      defaultValue: "India",
+    },
+
+    state_code: {
+      type: DataTypes.STRING(10),
       allowNull: true,
     },
 
     base_branch_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+
+    created_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
   },
   {

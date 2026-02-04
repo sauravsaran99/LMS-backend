@@ -15,6 +15,7 @@ const Payment = require("./payment.model");
 const Refund = require("./refund.model");
 const Blog = require("./blog.model");
 const ContactQuery = require("./contactQuery.model.js");
+const BranchTestPrice = require("./branchTestPrice.model");
 
 // Associations
 Role.hasMany(User, { foreignKey: "role_id" });
@@ -84,6 +85,13 @@ BookingTest.belongsTo(Booking, {
 Test.hasMany(BookingTest, { foreignKey: "test_id" });
 BookingTest.belongsTo(Test, { foreignKey: "test_id" });
 
+// BranchTestPrice associations
+Branch.hasMany(BranchTestPrice, { foreignKey: "branch_id" });
+BranchTestPrice.belongsTo(Branch, { foreignKey: "branch_id" });
+
+Test.hasMany(BranchTestPrice, { foreignKey: "test_id" });
+BranchTestPrice.belongsTo(Test, { foreignKey: "test_id" });
+
 // Export models
 module.exports = {
   sequelize,
@@ -101,4 +109,5 @@ module.exports = {
   Refund,
   Blog,
   ContactQuery,
+  BranchTestPrice,
 };

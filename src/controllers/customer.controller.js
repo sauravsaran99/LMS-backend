@@ -14,6 +14,10 @@ exports.createCustomer = async (req, res) => {
       });
     }
 
+    if (req.file) {
+      value.profile_image = `/uploads/customers/${req.file.filename}`;
+    }
+
     const customer = await customerService.createCustomer(value, req.user);
 
     res.status(201).json(customer);
@@ -25,20 +29,25 @@ exports.createCustomer = async (req, res) => {
 exports.searchCustomers = async (req, res) => {
   try {
     const paginationParams = getPaginationParams(req.query);
+    if (req.query.myBranchOnly === "true" && req.user.base_branch_id) {
+      paginationParams.baseBranchId = req.user.base_branch_id;
+    }
+
     const result = await customerService.searchCustomers(
       req.query.q,
       paginationParams,
+      req.user,
     );
 
     if (Array.isArray(result)) {
       // No pagination data
       res.json(result);
-    } else if (result.customers) {
+    } else if (result.rows) {
       // Pagination enabled
       res.json(
         getPaginatedResponse(
-          result.customers,
-          result.total,
+          result.rows,
+          result.count,
           paginationParams.page,
           paginationParams.limit,
         ),
@@ -53,6 +62,10 @@ exports.searchCustomers = async (req, res) => {
 
 exports.getCustomers = async (req, res) => {
   const paginationParams = getPaginationParams(req.query);
+  if (req.query.myBranchOnly === "true" && req.user.base_branch_id) {
+    paginationParams.baseBranchId = req.user.base_branch_id;
+  }
+
   const result = await customerService.getCustomers(req.user, paginationParams);
 
   if (result.rows) {
@@ -73,7 +86,12 @@ exports.getCustomers = async (req, res) => {
 
 exports.updateCustomer = async (req, res) => {
   try {
-    await customerService.updateCustomer(req.params.id, req.body, req.user);
+    const payload = { ...req.body };
+    console.log('payload', payload)
+    if (req.file) {
+      payload.profile_image = `/uploads/customers/${req.file.filename}`;
+    }
+    await customerService.updateCustomer(req.params.id, payload, req.user);
     res.json({ message: "Customer updated" });
   } catch (e) {
     res.status(400).json({ message: e.message });

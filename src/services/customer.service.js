@@ -18,16 +18,16 @@ class CustomerService {
 
     try {
       const existing = await customerRepo.findByNameAndPhone(
-  payload.name,
-  payload.phone
-);
+        payload.name,
+        payload.phone
+      );
 
-console.log('existing', existing)
+      console.log('existing', existing)
 
       if (existing) {
         throw new Error("Customer with same name and phone already exists");
       }
-      
+
 
       let baseBranchId;
       if (user.role === "SUPER_ADMIN") {
@@ -49,16 +49,16 @@ console.log('existing', existing)
         throw new Error("CUSTOMER role not found");
       }
 
-      
-   const normalizedName = payload.name
-  .toLowerCase()
-  .replace(/\s+/g, ""); // remove all spaces
 
-     const email = `${normalizedName}.${payload.phone}@lms.com`;
+      const normalizedName = payload.name
+        .toLowerCase()
+        .replace(/\s+/g, ""); // remove all spaces
+
+      const email = `${normalizedName}.${payload.phone}@lms.com`;
 
       const rawPassword = "Admin@123";
 
-  
+
 
       const userRecord = await userRepo.create(
         {
@@ -72,17 +72,24 @@ console.log('existing', existing)
         t,
       );
 
-          console.log('existing1', userRecord)
+      console.log('existing1', userRecord)
 
       const customer = await customerRepo.create(
         {
           name: payload.name,
           phone: payload.phone,
-          age: payload.age,
+          dob: payload.dob,
           gender: payload.gender,
           address: payload.address,
+          pincode: payload.pincode,
+          city: payload.city,
+          state: payload.state,
+          country: payload.country || "India",
+          state_code: payload.state_code,
+          profile_image: payload.profile_image,
           base_branch_id: baseBranchId,
           user_id: userRecord.id,
+          created_by: user.id,
         },
         t,
       );
@@ -103,33 +110,18 @@ console.log('existing', existing)
       throw error;
     }
   }
-
-  async searchCustomers(query, pagination = null) {
-    if (!query || query.length < 2) {
-      return [];
-    }
+  async searchCustomers(query, pagination = null, user = null) {
     return customerRepo.search(query, pagination);
   }
 
   getCustomers(user, pagination = null) {
-    if (pagination) {
-      return Customer.findAndCountAll({
-        // where: { base_branch_id: user.base_branch_id },
-        order: [["created_at", "DESC"]],
-        limit: pagination.limit,
-        offset: pagination.offset,
-      });
-    }
-    return Customer.findAll({
-      // where: { base_branch_id: user.base_branch_id },
-      order: [["created_at", "DESC"]],
-    });
+    return customerRepo.findAll(pagination);
   }
 
   async updateCustomer(id, payload, user) {
     const customer = await Customer.findByPk(id);
 
-    if (!customer || customer.base_branch_id !== user.base_branch_id) {
+    if (!customer || (user.role !== "SUPER_ADMIN" && customer.base_branch_id !== user.base_branch_id)) {
       throw new Error("Unauthorized");
     }
 
@@ -138,7 +130,15 @@ console.log('existing', existing)
     await customer.update({
       name: payload.name,
       phone: payload.phone,
+      dob: payload.dob,
+      gender: payload.gender,
       address: payload.address,
+      pincode: payload.pincode,
+      city: payload.city,
+      state: payload.state,
+      country: payload.country,
+      state_code: payload.state_code,
+      profile_image: payload.profile_image || customer.profile_image,
     });
 
     await AuditLog.create({
@@ -179,53 +179,53 @@ console.log('existing', existing)
     });
   }
 
-async getMyBookings(user, pagination = null) {
-  const customer = await Customer.findOne({
-    where: { user_id: user.id },
-  });
+  async getMyBookings(user, pagination = null) {
+    const customer = await Customer.findOne({
+      where: { user_id: user.id },
+    });
 
-  if (!customer) throw new Error("Customer profile not found");
+    if (!customer) throw new Error("Customer profile not found");
 
-  const options = {
-    where: { customer_id: customer.id },
-    order: [["created_at", "DESC"]],
+    const options = {
+      where: { customer_id: customer.id },
+      order: [["created_at", "DESC"]],
 
-    include: [
-      {
-        model: BookingTest,
-        as: "bookingTests",
-        attributes: [],        // ❗ do NOT select id
-        required: false,
-      },
-    ],
-
-    attributes: {
       include: [
-        [
-          sequelize.fn(
-            "COUNT",
-            sequelize.fn(
-              "DISTINCT",
-              sequelize.col("bookingTests.id"),
-            ),
-          ),
-          "tests_count",
-        ],
+        {
+          model: BookingTest,
+          as: "bookingTests",
+          attributes: [],        // ❗ do NOT select id
+          required: false,
+        },
       ],
-    },
 
-    group: ["Booking.id"],
-    subQuery: false,
-  };
+      attributes: {
+        include: [
+          [
+            sequelize.fn(
+              "COUNT",
+              sequelize.fn(
+                "DISTINCT",
+                sequelize.col("bookingTests.id"),
+              ),
+            ),
+            "tests_count",
+          ],
+        ],
+      },
 
-  if (pagination) {
-    options.limit = pagination.limit;
-    options.offset = pagination.offset;
-    return Booking.findAndCountAll(options);
+      group: ["Booking.id"],
+      subQuery: false,
+    };
+
+    if (pagination) {
+      options.limit = pagination.limit;
+      options.offset = pagination.offset;
+      return Booking.findAndCountAll(options);
+    }
+
+    return Booking.findAll(options);
   }
-
-  return Booking.findAll(options);
-}
 
 
   async getBookingTests(bookingId, user, pagination = null) {

@@ -6,6 +6,7 @@ const {
   Customer,
   AuditLog,
   User,
+  BranchTestPrice,
 } = require("../models");
 const { calculateOffset } = require("../utils/pagination.util");
 
@@ -14,9 +15,29 @@ class BookingRepository {
     return Customer.findByPk(id);
   }
 
-  async getTestsByIds(ids) {
-    return Test.findAll({
+  async getTestsByIds(ids, branchId = null) {
+    const include = [];
+    if (branchId) {
+      include.push({
+        model: BranchTestPrice,
+        where: { branch_id: branchId },
+        required: false,
+      });
+    }
+
+    const tests = await Test.findAll({
       where: { id: ids, is_active: true },
+      include,
+    });
+
+    // Resolve price: branch price first, then default price
+    return tests.map((test) => {
+      const branchPriceObj = test.BranchTestPrices?.[0];
+      const resolvedPrice = branchPriceObj ? branchPriceObj.price : test.price;
+
+      const testJson = test.toJSON();
+      testJson.resolvedPrice = resolvedPrice;
+      return testJson;
     });
   }
 
@@ -30,7 +51,7 @@ class BookingRepository {
         {
           booking_id: bookingId,
           test_id: test.id,
-          price_snapshot: test.price,
+          price_snapshot: test.resolvedPrice || test.price,
         },
         { transaction },
       );

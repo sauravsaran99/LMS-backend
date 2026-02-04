@@ -23,8 +23,8 @@ const startServer = async () => {
   // 2️⃣ Sync & seed ONLY when explicitly allowed
   if (process.env.DB_SYNC === "true") {
     try {
-      await sequelize.sync();
-      console.log("✅ Models synced");
+      await sequelize.sync({ alter: true });
+      console.log("✅ Models synced with changes (alter: true)");
 
       await seedRoles();
       await seedSuperAdmin();
