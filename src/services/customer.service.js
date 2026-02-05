@@ -88,6 +88,7 @@ class CustomerService {
           state_code: payload.state_code,
           profile_image: payload.profile_image,
           base_branch_id: baseBranchId,
+          remarks: payload.remarks,
           user_id: userRecord.id,
           created_by: user.id,
         },
@@ -139,6 +140,7 @@ class CustomerService {
       country: payload.country,
       state_code: payload.state_code,
       profile_image: payload.profile_image || customer.profile_image,
+      remarks: payload.remarks,
     });
 
     await AuditLog.create({

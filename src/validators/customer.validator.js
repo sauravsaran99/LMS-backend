@@ -10,6 +10,7 @@ exports.createCustomerSchema = Joi.object({
     city: Joi.string().trim().optional(),
     state: Joi.string().trim().optional(),
     country: Joi.string().trim().default("India").optional(),
+    remarks: Joi.string().trim().optional(),
     state_code: Joi.string().trim().optional(),
 
     // Required ONLY when role = SUPER_ADMIN

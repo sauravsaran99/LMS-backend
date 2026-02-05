@@ -3,6 +3,7 @@ const {
   getPaginationParams,
   getPaginatedResponse,
 } = require("../utils/pagination.util");
+  const { BranchTestPrice } = require("../models");
 
 exports.createTest = async (req, res) => {
   try {
@@ -31,7 +32,7 @@ exports.getAllTests = async (req, res) => {
   // Determine branch context: explicit query param OR logged-in user's base branch
   const targetBranchId = req.query.branch_id || req.user?.base_branch_id;
 
-  const { BranchTestPrice } = require("../models");
+
 
   if (paginationParams) {
     options.limit = paginationParams.limit;
