@@ -52,12 +52,12 @@ class BookingService {
       }
 
       // 2. Fetch tests
-      const tests = await bookingRepo.getTestsByIds(test_ids);
+      const tests = await bookingRepo.getTestsByIds(test_ids, customer.base_branch_id);
       if (!tests.length) throw new Error("No valid tests selected");
 
       // 3. Calculate original amount
       const originalAmount = tests.reduce(
-        (sum, test) => sum + Number(test.price),
+        (sum, test) => sum + Number(test.resolvedPrice || test.price),
         0,
       );
 

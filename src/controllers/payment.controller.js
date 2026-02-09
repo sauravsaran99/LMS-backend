@@ -59,7 +59,7 @@ exports.getBookingPayments = async (req, res) => {
     const paginationParams = getPaginationParams(req.query);
 
     const result = await paymentService.getBookingPayments(
-      paginationParams,
+      { ...paginationParams, ...req.query },
       req.user, // ✅ ONLY ADD THIS
     );
 

@@ -3,14 +3,18 @@ const userRepository = require("../repositories/user.repository");
 
 class BranchAdminService {
   async getUsers(admin, pagination = null) {
-    const { UserBranch } = require("../models");
     const { Op } = require("sequelize");
 
     // users based in this branch OR assigned to this branch via UserBranch
+    // Use literal for the UserBranch part to avoid problematic INNER JOIN behavior with Op.or on joined tables
     const where = {
       [Op.or]: [
         { base_branch_id: admin.base_branch_id },
-        { "$UserBranches.branch_id$": admin.base_branch_id },
+        {
+          id: {
+            [Op.in]: sequelize.literal(`(SELECT user_id FROM user_branches WHERE branch_id = ${admin.base_branch_id})`)
+          }
+        },
       ],
     };
 
@@ -24,13 +28,8 @@ class BranchAdminService {
             name: ["RECEPTIONIST", "TECHNICIAN"],
           },
         },
-        {
-          model: UserBranch,
-          attributes: ["branch_id"],
-          required: false,
-        },
       ],
-      subQuery: false,
+      distinct: true,
       order: [["name", "ASC"]],
     };
 
@@ -40,10 +39,6 @@ class BranchAdminService {
           {
             model: Role,
             where: { name: ["RECEPTIONIST", "TECHNICIAN"] },
-          },
-          {
-            model: UserBranch,
-            required: false,
           },
         ],
         where,

@@ -18,6 +18,7 @@ const refundRoutes = require("./routes/refund.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const blogRoutes = require("./routes/blog.routes");
 const contactRoutes = require("./routes/contact.routes");
+const branchTestPriceRoutes = require("./routes/branchTestPrice.routes");
 
 
 const app = express();
@@ -61,5 +62,6 @@ app.use("/refunds", refundRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/blogs", blogRoutes);
 app.use("/contacts", contactRoutes);
+app.use("/branch-test-prices", branchTestPriceRoutes);
 
 module.exports = app;

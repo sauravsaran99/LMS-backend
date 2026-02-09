@@ -26,7 +26,7 @@ router.get(
 router.get(
     "/bookings",
     auth,
-    authorize(["RECEPTIONIST", "TECHNICIAN", "BRANCH_ADMIN"]),
+    authorize(["RECEPTIONIST", "TECHNICIAN", "BRANCH_ADMIN", "SUPER_ADMIN"]),
     paymentController.getBookingPayments
 );
 
