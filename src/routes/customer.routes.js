@@ -7,7 +7,7 @@ const authorize = require("../middlewares/role.middleware");
 
 const customerUpload = require("../middlewares/customerUpload.middleware");
 
-router.use(auth, authorize(["RECEPTIONIST", "CUSTOMER"]));
+router.use(auth, authorize(["RECEPTIONIST", "CUSTOMER", "SUPER_ADMIN", "BRANCH_ADMIN"]));
 
 router.post("/", customerUpload.single("profile_image"), customerController.createCustomer);
 

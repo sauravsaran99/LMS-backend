@@ -167,10 +167,11 @@ class PaymentService {
     // ⛔ BELOW CODE UNCHANGED
     if (bookings.bookings) {
       for (const b of bookings.bookings) {
-        const totalPaid = Number(b.total_paid || 0);
-        const totalRefunded = Number(b.total_refunded || 0);
+        const bookingData = b.get ? b.get({ plain: true }) : b;
+        const totalPaid = Number(bookingData.total_paid || 0);
+        const totalRefunded = Number(bookingData.total_refunded || 0);
         const netPaid = totalPaid - totalRefunded;
-        const balance = Number(b.final_amount) - netPaid;
+        const balance = Number(bookingData.final_amount) - netPaid;
 
         let payment_status = "PENDING";
         if (netPaid > 0 && balance > 0) payment_status = "PARTIAL";
@@ -196,10 +197,11 @@ class PaymentService {
     }
 
     for (const b of bookings) {
-      const totalPaid = Number(b.total_paid || 0);
-      const totalRefunded = Number(b.total_refunded || 0);
+      const bookingData = b.get ? b.get({ plain: true }) : b;
+      const totalPaid = Number(bookingData.total_paid || 0);
+      const totalRefunded = Number(bookingData.total_refunded || 0);
       const netPaid = totalPaid - totalRefunded;
-      const balance = Number(b.final_amount) - netPaid;
+      const balance = Number(bookingData.final_amount) - netPaid;
 
       let payment_status = "PENDING";
       if (netPaid > 0 && balance > 0) payment_status = "PARTIAL";

@@ -1,5 +1,5 @@
-const { Sequelize } = require("sequelize");
-const { Payment, Booking } = require("../models");
+const { Sequelize, Op } = require("sequelize");
+const { Payment, Booking, Test, Customer, BookingTest } = require("../models");
 const { calculateOffset } = require("../utils/pagination.util");
 
 class PaymentRepository {
@@ -55,11 +55,13 @@ class PaymentRepository {
   //   return Booking.findAll(options);
   // }
 
-  async getBookingPaymentSummary(pagination = null, user) {
+  async getBookingPaymentSummary(params = null, user) {
+    const { page, limit, test_id, customer_id, booking_number } = params || {};
     const options = {
       attributes: [
         "booking_number",
         "final_amount",
+        "created_at",
         [
           Sequelize.literal(`(
           SELECT COALESCE(SUM(amount), 0)
@@ -77,10 +79,33 @@ class PaymentRepository {
           "total_refunded",
         ],
       ],
-      order: [["created_at", "DESC"]],
-      raw: true,
-      where: {}, // ✅ ADD
+      order: [[Sequelize.col('created_at'), 'DESC']],
+
+      // raw: true, // Removed to fix property access with includes
+      where: {},
+      include: [],
+      distinct: true,
     };
+
+    // 🔍 FILTER: Customer
+    if (customer_id) {
+      options.where.customer_id = customer_id;
+    }
+
+    // 🔍 FILTER: Booking Number
+    if (booking_number) {
+      options.where.booking_number = { [Op.like]: `%${booking_number}%` };
+    }
+
+    // 🔍 FILTER: Test
+    if (test_id) {
+      options.include.push({
+        model: BookingTest,
+        as: 'bookingTests',
+        required: true,
+        where: { test_id: test_id }
+      });
+    }
 
     // 🔐 ROLE-BASED FILTER (ONLY THIS LOGIC)
     if (user) {
@@ -97,13 +122,17 @@ class PaymentRepository {
       }
     }
 
-    if (pagination) {
-      options.limit = pagination.limit;
-      options.offset = pagination.offset;
+    if (limit && page) {
+      options.limit = parseInt(limit);
+      options.offset = calculateOffset(page, limit);
     }
 
-    if (pagination) {
-      const total = await Booking.count({ where: options.where });
+    if (limit && page) {
+      const total = await Booking.count({
+        where: options.where,
+        include: options.include,
+        distinct: true,
+      });
       const bookings = await Booking.findAll(options);
       return { bookings, total };
     }
